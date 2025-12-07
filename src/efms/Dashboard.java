@@ -28,9 +28,10 @@ public class Dashboard extends JFrame {
         JPanel topBar = new JPanel();
         topBar.setLayout(new BorderLayout());
         topBar.setBackground(new Color(35, 35, 35));
-        topBar.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        topBar.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 10));
         
-        JPanel leftSection = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 5));
+        JPanel leftSection = new JPanel();
+        leftSection.setLayout(new BoxLayout(leftSection, BoxLayout.X_AXIS));
         leftSection.setBackground(new Color(35, 35, 35));
         
         JLabel userLabel = new JLabel("Welcome, " + username);
@@ -38,12 +39,15 @@ public class Dashboard extends JFrame {
         userLabel.setFont(new Font("Arial", Font.BOLD, 15));
         leftSection.add(userLabel);
         
+        leftSection.add(Box.createRigidArea(new Dimension(15, 0)));
+        
         balanceLabel = new JLabel("Balance: 0.00 $");
         balanceLabel.setForeground(new Color(76, 175, 80));
         balanceLabel.setFont(new Font("Arial", Font.BOLD, 15));
         leftSection.add(balanceLabel);
         
-        JPanel rightSection = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 5));
+        JPanel rightSection = new JPanel();
+        rightSection.setLayout(new BoxLayout(rightSection, BoxLayout.X_AXIS));
         rightSection.setBackground(new Color(35, 35, 35));
         
         JButton dashBtn = new JButton("Dashboard");
@@ -66,6 +70,8 @@ public class Dashboard extends JFrame {
         });
         rightSection.add(dashBtn);
         
+        rightSection.add(Box.createRigidArea(new Dimension(10, 0)));
+        
         histBtn.addActionListener(e -> {
             cardLayout.show(contentPanel, "history");
             histBtn.setBackground(new Color(0, 150, 136));
@@ -73,6 +79,8 @@ public class Dashboard extends JFrame {
             setTitle("EFMS - History");
         });
         rightSection.add(histBtn);
+        
+        rightSection.add(Box.createRigidArea(new Dimension(10, 0)));
         
         JButton logoutBtn = new JButton("Logout");
         logoutBtn.setBackground(new Color(244, 67, 54));
@@ -363,6 +371,16 @@ public class Dashboard extends JFrame {
                 return;
             }
             
+            // Sort data by amount in descending order, but keep "Others" at the end
+            List<Map.Entry<String, Double>> sortedEntries = new ArrayList<>(data.entrySet());
+            sortedEntries.sort((e1, e2) -> {
+                // If either is "Others", it goes to the end
+                if (e1.getKey().equalsIgnoreCase("Others")) return 1;
+                if (e2.getKey().equalsIgnoreCase("Others")) return -1;
+                // Otherwise sort by amount descending
+                return Double.compare(e2.getValue(), e1.getValue());
+            });
+            
             Color[] colors = {
                 new Color(255, 99, 132), new Color(54, 162, 235),
                 new Color(255, 206, 86), new Color(75, 192, 192),
@@ -380,7 +398,7 @@ public class Dashboard extends JFrame {
             int legendX = 20;
             int legendY = 40;
             
-            for (Map.Entry<String, Double> entry : data.entrySet()) {
+            for (Map.Entry<String, Double> entry : sortedEntries) {
                 double percentage = (entry.getValue() / total);
                 int arcAngle = (int) (percentage * 360);
                 

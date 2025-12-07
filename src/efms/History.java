@@ -18,6 +18,7 @@ public class History {
     private JComboBox<String> monthBox;
     private JLabel monthlyIncomeLabel, monthlyExpenseLabel;
     private String currentSort = "date DESC";
+    private Map<Integer, Integer> rowToIdMap = new HashMap<>();
     
     public JPanel createHistoryPanel(int userId, Dashboard dashboard) {
         this.userId = userId;
@@ -115,11 +116,13 @@ public class History {
         table.setBackground(new Color(45, 45, 45));
         table.setForeground(Color.WHITE);
         table.setSelectionBackground(new Color(0, 150, 136));
+        table.setSelectionForeground(Color.WHITE);
         table.setRowHeight(28);
         table.setFont(new Font("Arial", Font.PLAIN, 12));
         table.setShowVerticalLines(true);
         table.setGridColor(new Color(60, 60, 60));
         table.setIntercellSpacing(new Dimension(1, 1));
+        table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
             @Override
@@ -128,8 +131,14 @@ public class History {
                 super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 setHorizontalAlignment(SwingConstants.LEFT);
                 setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 10));
-                setBackground(new Color(45, 45, 45));
-                setForeground(Color.WHITE);
+                
+                if (isSelected) {
+                    setBackground(new Color(0, 150, 136));
+                    setForeground(Color.WHITE);
+                } else {
+                    setBackground(new Color(45, 45, 45));
+                    setForeground(Color.WHITE);
+                }
                 return this;
             }
         };
@@ -256,6 +265,7 @@ public class History {
     
     private void loadTransactions() {
         model.setRowCount(0);
+        rowToIdMap.clear();
         
         StringBuilder sql = new StringBuilder("SELECT id, description, type, category, amount, date FROM transactions WHERE user_id=?");
         List<Object> params = new ArrayList<>();
@@ -292,8 +302,10 @@ public class History {
             
             ResultSet rs = stmt.executeQuery();
             double totalIncome = 0, totalExpense = 0;
+            int rowIndex = 0;
             
             while (rs.next()) {
+                int id = rs.getInt("id");
                 String type = rs.getString("type");
                 double amount = rs.getDouble("amount");
                 
@@ -307,6 +319,9 @@ public class History {
                     String.format("$%.2f", amount),
                     rs.getDate("date")
                 });
+                
+                rowToIdMap.put(rowIndex, id);
+                rowIndex++;
             }
             
             if (!month.equals("Month") || (!year.isEmpty() && !year.equals("Year"))) {
@@ -324,21 +339,7 @@ public class History {
     private int getSelectedId() {
         int row = table.getSelectedRow();
         if (row == -1) return -1;
-        
-        try (Connection conn = Database.connect()) {
-            String desc = (String) model.getValueAt(row, 0);
-            String type = (String) model.getValueAt(row, 1);
-            String sql = "SELECT id FROM transactions WHERE user_id=? AND description=? AND type=? LIMIT 1";
-            PreparedStatement stmt = conn.prepareStatement(sql);
-            stmt.setInt(1, userId);
-            stmt.setString(2, desc);
-            stmt.setString(3, type);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getInt("id");
-        } catch (SQLException ex) {
-            System.out.println("Get ID error: " + ex.getMessage());
-        }
-        return -1;
+        return rowToIdMap.getOrDefault(row, -1);
     }
     
     private void updateTransaction() {
