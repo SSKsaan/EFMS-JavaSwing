@@ -1,8 +1,16 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package efms;
 
 import java.sql.*;
 import java.util.*;
 
+/**
+ *
+ * @author ssksan
+ */
 public class Database {
     private static final String URL = "jdbc:mysql://localhost:3306/efmsd";
     private static final String USER = "root";
@@ -14,8 +22,8 @@ public class Database {
     
     public static int login(String username, String password) {
         try (Connection conn = connect()) {
-            String sql = "SELECT id FROM users WHERE username=? AND password=?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(
+                "SELECT id FROM users WHERE username=? AND password=?");
             stmt.setString(1, username);
             stmt.setString(2, password);
             ResultSet rs = stmt.executeQuery();
@@ -28,8 +36,8 @@ public class Database {
     
     public static boolean register(String username, String password) {
         try (Connection conn = connect()) {
-            String sql = "INSERT INTO users (username, password) VALUES (?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(
+                "INSERT INTO users (username, password) VALUES (?, ?)");
             stmt.setString(1, username);
             stmt.setString(2, password);
             stmt.executeUpdate();
@@ -41,12 +49,10 @@ public class Database {
     
     public static boolean addTransaction(int userId, String type, String category, 
                                         double amount, String desc, java.sql.Date date) {
-        if (category == null || category.trim().isEmpty()) {
-            category = "Others";
-        }
+        if (category == null || category.trim().isEmpty()) category = "Others";
         try (Connection conn = connect()) {
-            String sql = "INSERT INTO transactions (user_id, type, category, amount, description, date) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(
+                "INSERT INTO transactions (user_id, type, category, amount, description, date) VALUES (?, ?, ?, ?, ?, ?)");
             stmt.setInt(1, userId);
             stmt.setString(2, type);
             stmt.setString(3, category);
@@ -63,8 +69,7 @@ public class Database {
     
     public static boolean deleteTransaction(int id) {
         try (Connection conn = connect()) {
-            String sql = "DELETE FROM transactions WHERE id=?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement("DELETE FROM transactions WHERE id=?");
             stmt.setInt(1, id);
             stmt.executeUpdate();
             return true;
@@ -75,12 +80,10 @@ public class Database {
     
     public static boolean updateTransaction(int id, String type, String category, 
                                            double amount, String desc, java.sql.Date date) {
-        if (category == null || category.trim().isEmpty()) {
-            category = "Others";
-        }
+        if (category == null || category.trim().isEmpty()) category = "Others";
         try (Connection conn = connect()) {
-            String sql = "UPDATE transactions SET type=?, category=?, amount=?, description=?, date=? WHERE id=?";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(
+                "UPDATE transactions SET type=?, category=?, amount=?, description=?, date=? WHERE id=?");
             stmt.setString(1, type);
             stmt.setString(2, category);
             stmt.setDouble(3, amount);
@@ -97,8 +100,8 @@ public class Database {
     public static List<String> getCategories(int userId) {
         List<String> categories = new ArrayList<>();
         try (Connection conn = connect()) {
-            String sql = "SELECT DISTINCT category FROM transactions WHERE user_id=? ORDER BY category";
-            PreparedStatement stmt = conn.prepareStatement(sql);
+            PreparedStatement stmt = conn.prepareStatement(
+                "SELECT DISTINCT category FROM transactions WHERE user_id=? ORDER BY category");
             stmt.setInt(1, userId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {

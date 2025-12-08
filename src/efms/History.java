@@ -1,3 +1,7 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
 package efms;
 
 import javax.swing.*;
@@ -9,6 +13,10 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 
+/**
+ *
+ * @author ssksan
+ */
 public class History {
     private int userId;
     private Dashboard dashboard;
@@ -27,6 +35,15 @@ public class History {
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(new Color(30, 30, 30));
         
+        mainPanel.add(createTopPanel(), BorderLayout.NORTH);
+        mainPanel.add(createTablePanel(), BorderLayout.CENTER);
+        mainPanel.add(createBottomPanel(), BorderLayout.SOUTH);
+        
+        loadTransactions();
+        return mainPanel;
+    }
+    
+    private JPanel createTopPanel() {
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setBackground(new Color(40, 40, 40));
         topPanel.setBorder(BorderFactory.createEmptyBorder(12, 15, 12, 15));
@@ -44,14 +61,14 @@ public class History {
         yearField = new JTextField("Year", 8);
         yearField.setPreferredSize(new Dimension(80, 28));
         yearField.setForeground(Color.GRAY);
-        yearField.addFocusListener(new java.awt.event.FocusAdapter() {
-            public void focusGained(java.awt.event.FocusEvent e) {
+        yearField.addFocusListener(new FocusAdapter() {
+            public void focusGained(FocusEvent e) {
                 if (yearField.getText().equals("Year")) {
                     yearField.setText("");
                     yearField.setForeground(Color.BLACK);
                 }
             }
-            public void focusLost(java.awt.event.FocusEvent e) {
+            public void focusLost(FocusEvent e) {
                 if (yearField.getText().isEmpty()) {
                     yearField.setText("Year");
                     yearField.setForeground(Color.GRAY);
@@ -60,11 +77,7 @@ public class History {
         });
         leftPanel.add(yearField);
         
-        JButton filterBtn = new JButton("Filter");
-        filterBtn.setBackground(new Color(0, 150, 136));
-        filterBtn.setForeground(Color.WHITE);
-        filterBtn.setFocusPainted(false);
-        filterBtn.setPreferredSize(new Dimension(80, 28));
+        JButton filterBtn = createButton("Filter", 80, new Color(0, 150, 136));
         filterBtn.addActionListener(e -> loadTransactions());
         leftPanel.add(filterBtn);
         
@@ -84,32 +97,25 @@ public class History {
         searchField = new JTextField(20);
         searchField.setPreferredSize(new Dimension(200, 28));
         searchField.addKeyListener(new KeyAdapter() {
-            @Override
             public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    loadTransactions();
-                }
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) loadTransactions();
             }
         });
         rightPanel.add(searchField);
         
-        JButton searchBtn = new JButton("Search");
-        searchBtn.setBackground(new Color(0, 150, 136));
-        searchBtn.setForeground(Color.WHITE);
-        searchBtn.setFocusPainted(false);
-        searchBtn.setPreferredSize(new Dimension(90, 28));
+        JButton searchBtn = createButton("Search", 90, new Color(0, 150, 136));
         searchBtn.addActionListener(e -> loadTransactions());
         rightPanel.add(searchBtn);
         
         topPanel.add(leftPanel, BorderLayout.WEST);
         topPanel.add(rightPanel, BorderLayout.EAST);
-        
+        return topPanel;
+    }
+    
+    private JScrollPane createTablePanel() {
         model = new DefaultTableModel(
             new String[]{"Description", "Type", "Category", "Amount", "Date"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            public boolean isCellEditable(int row, int col) { return false; }
         };
         
         table = new JTable(model);
@@ -121,17 +127,14 @@ public class History {
         table.setFont(new Font("Arial", Font.PLAIN, 12));
         table.setShowVerticalLines(true);
         table.setGridColor(new Color(60, 60, 60));
-        table.setIntercellSpacing(new Dimension(1, 1));
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         
         DefaultTableCellRenderer cellRenderer = new DefaultTableCellRenderer() {
-            @Override
             public Component getTableCellRendererComponent(JTable table, Object value,
-                    boolean isSelected, boolean hasFocus, int row, int column) {
-                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                    boolean isSelected, boolean hasFocus, int row, int col) {
+                super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
                 setHorizontalAlignment(SwingConstants.LEFT);
                 setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 10));
-                
                 if (isSelected) {
                     setBackground(new Color(0, 150, 136));
                     setForeground(Color.WHITE);
@@ -180,23 +183,10 @@ public class History {
         }
         
         header.addMouseListener(new MouseAdapter() {
-            @Override
             public void mouseClicked(MouseEvent e) {
                 int col = header.columnAtPoint(e.getPoint());
-                String columnName = model.getColumnName(col);
-                
-                if (columnName.equals("Description")) {
-                    currentSort = currentSort.equals("description ASC") ? "description DESC" : "description ASC";
-                } else if (columnName.equals("Type")) {
-                    currentSort = currentSort.equals("type ASC") ? "type DESC" : "type ASC";
-                } else if (columnName.equals("Category")) {
-                    currentSort = currentSort.equals("category ASC") ? "category DESC" : "category ASC";
-                } else if (columnName.equals("Amount")) {
-                    currentSort = currentSort.equals("amount ASC") ? "amount DESC" : "amount ASC";
-                } else if (columnName.equals("Date")) {
-                    currentSort = currentSort.equals("date ASC") ? "date DESC" : "date ASC";
-                }
-                
+                String name = model.getColumnName(col).toLowerCase();
+                currentSort = currentSort.equals(name + " ASC") ? name + " DESC" : name + " ASC";
                 loadTransactions();
             }
         });
@@ -209,7 +199,10 @@ public class History {
         ));
         scrollPane.setBackground(new Color(30, 30, 30));
         scrollPane.getViewport().setOpaque(true);
-        
+        return scrollPane;
+    }
+    
+    private JPanel createBottomPanel() {
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setBackground(new Color(40, 40, 40));
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
@@ -217,50 +210,37 @@ public class History {
         JPanel leftButtons = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         leftButtons.setBackground(new Color(40, 40, 40));
         
-        JButton updateBtn = new JButton("Update");
-        updateBtn.setBackground(new Color(33, 150, 243));
-        updateBtn.setForeground(Color.WHITE);
-        updateBtn.setFocusPainted(false);
-        updateBtn.setPreferredSize(new Dimension(90, 32));
+        JButton updateBtn = createButton("Update", 90, new Color(33, 150, 243));
         updateBtn.addActionListener(e -> updateTransaction());
         leftButtons.add(updateBtn);
         
-        JButton deleteBtn = new JButton("Delete");
-        deleteBtn.setBackground(new Color(244, 67, 54));
-        deleteBtn.setForeground(Color.WHITE);
-        deleteBtn.setFocusPainted(false);
-        deleteBtn.setPreferredSize(new Dimension(90, 32));
+        JButton deleteBtn = createButton("Delete", 90, new Color(244, 67, 54));
         deleteBtn.addActionListener(e -> deleteTransaction());
         leftButtons.add(deleteBtn);
         
         JPanel rightButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         rightButtons.setBackground(new Color(40, 40, 40));
         
-        JButton importBtn = new JButton("Import");
-        importBtn.setBackground(new Color(100, 100, 100));
-        importBtn.setForeground(Color.WHITE);
-        importBtn.setFocusPainted(false);
-        importBtn.setPreferredSize(new Dimension(90, 32));
+        JButton importBtn = createButton("Import", 90, new Color(100, 100, 100));
         importBtn.addActionListener(e -> importCSV());
         rightButtons.add(importBtn);
         
-        JButton exportBtn = new JButton("Export");
-        exportBtn.setBackground(new Color(100, 100, 100));
-        exportBtn.setForeground(Color.WHITE);
-        exportBtn.setFocusPainted(false);
-        exportBtn.setPreferredSize(new Dimension(90, 32));
+        JButton exportBtn = createButton("Export", 90, new Color(100, 100, 100));
         exportBtn.addActionListener(e -> exportCSV());
         rightButtons.add(exportBtn);
         
         bottomPanel.add(leftButtons, BorderLayout.WEST);
         bottomPanel.add(rightButtons, BorderLayout.EAST);
-        
-        mainPanel.add(topPanel, BorderLayout.NORTH);
-        mainPanel.add(scrollPane, BorderLayout.CENTER);
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
-        
-        loadTransactions();
-        return mainPanel;
+        return bottomPanel;
+    }
+    
+    private JButton createButton(String text, int width, Color bg) {
+        JButton btn = new JButton(text);
+        btn.setBackground(bg);
+        btn.setForeground(Color.WHITE);
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(width, text.equals("Filter") || text.equals("Search") ? 28 : 32));
+        return btn;
     }
     
     private void loadTransactions() {
@@ -279,9 +259,8 @@ public class History {
         
         String month = (String) monthBox.getSelectedItem();
         if (!month.equals("Month")) {
-            int monthNum = monthBox.getSelectedIndex();
             sql.append(" AND MONTH(date)=?");
-            params.add(monthNum);
+            params.add(monthBox.getSelectedIndex());
         }
         
         String year = yearField.getText().trim();
@@ -313,15 +292,11 @@ public class History {
                 else totalExpense += amount;
                 
                 model.addRow(new Object[]{
-                    rs.getString("description"),
-                    type,
-                    rs.getString("category"),
-                    String.format("$%.2f", amount),
-                    rs.getDate("date")
+                    rs.getString("description"), type, rs.getString("category"),
+                    String.format("$%.2f", amount), rs.getDate("date")
                 });
                 
-                rowToIdMap.put(rowIndex, id);
-                rowIndex++;
+                rowToIdMap.put(rowIndex++, id);
             }
             
             if (!month.equals("Month") || (!year.isEmpty() && !year.equals("Year"))) {
@@ -338,8 +313,7 @@ public class History {
     
     private int getSelectedId() {
         int row = table.getSelectedRow();
-        if (row == -1) return -1;
-        return rowToIdMap.getOrDefault(row, -1);
+        return row == -1 ? -1 : rowToIdMap.getOrDefault(row, -1);
     }
     
     private void updateTransaction() {
@@ -359,16 +333,8 @@ public class History {
         dialog.setLayout(null);
         
         int y = 30;
-        
-        JLabel descLabel = new JLabel("Description:");
-        descLabel.setBounds(40, y, 100, 25);
-        descLabel.setForeground(Color.WHITE);
-        dialog.add(descLabel);
-        
-        JTextField descField = new JTextField((String) model.getValueAt(row, 0));
-        descField.setBounds(150, y, 220, 28);
-        dialog.add(descField);
-        y += 45;
+        y = addField(dialog, "Description:", new JTextField((String) model.getValueAt(row, 0)), y);
+        JTextField descField = (JTextField) dialog.getContentPane().getComponent(1);
         
         JLabel typeLabel = new JLabel("Type:");
         typeLabel.setBounds(40, y, 100, 25);
@@ -381,37 +347,21 @@ public class History {
         dialog.add(typeBox);
         y += 45;
         
-        JLabel catLabel = new JLabel("Category:");
-        catLabel.setBounds(40, y, 100, 25);
-        catLabel.setForeground(Color.WHITE);
-        dialog.add(catLabel);
-        
-        JTextField catField = new JTextField((String) model.getValueAt(row, 2));
-        catField.setBounds(150, y, 220, 28);
-        dialog.add(catField);
-        y += 45;
-        
-        JLabel amtLabel = new JLabel("Amount:");
-        amtLabel.setBounds(40, y, 100, 25);
-        amtLabel.setForeground(Color.WHITE);
-        dialog.add(amtLabel);
+        y = addField(dialog, "Category:", new JTextField((String) model.getValueAt(row, 2)), y);
+        JTextField catField = (JTextField) dialog.getContentPane().getComponent(5);
         
         String amtStr = ((String) model.getValueAt(row, 3)).replace("$", "");
-        JTextField amtField = new JTextField(amtStr);
-        amtField.setBounds(150, y, 220, 28);
-        dialog.add(amtField);
-        y += 45;
+        y = addField(dialog, "Amount:", new JTextField(amtStr), y);
+        JTextField amtField = (JTextField) dialog.getContentPane().getComponent(7);
         
         JLabel dateLabel = new JLabel("Date:");
         dateLabel.setBounds(40, y, 100, 25);
         dateLabel.setForeground(Color.WHITE);
         dialog.add(dateLabel);
         
-        SpinnerDateModel dateModel = new SpinnerDateModel();
-        JSpinner dateSpinner = new JSpinner(dateModel);
+        JSpinner dateSpinner = new JSpinner(new SpinnerDateModel());
         dateSpinner.setValue((java.sql.Date) model.getValueAt(row, 4));
-        JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd");
-        dateSpinner.setEditor(dateEditor);
+        dateSpinner.setEditor(new JSpinner.DateEditor(dateSpinner, "yyyy-MM-dd"));
         dateSpinner.setBounds(150, y, 220, 28);
         dialog.add(dateSpinner);
         y += 55;
@@ -427,8 +377,7 @@ public class History {
                 String type = (String) typeBox.getSelectedItem();
                 String cat = catField.getText().trim();
                 double amt = Double.parseDouble(amtField.getText());
-                java.util.Date date = (java.util.Date) dateSpinner.getValue();
-                java.sql.Date sqlDate = new java.sql.Date(date.getTime());
+                java.sql.Date sqlDate = new java.sql.Date(((java.util.Date) dateSpinner.getValue()).getTime());
                 
                 if (Database.updateTransaction(id, type, cat, amt, desc, sqlDate)) {
                     JOptionPane.showMessageDialog(dialog, "Updated!");
@@ -443,8 +392,17 @@ public class History {
             }
         });
         dialog.add(saveBtn);
-        
         dialog.setVisible(true);
+    }
+    
+    private int addField(JDialog dialog, String label, JTextField field, int y) {
+        JLabel lbl = new JLabel(label);
+        lbl.setBounds(40, y, 100, 25);
+        lbl.setForeground(Color.WHITE);
+        dialog.add(lbl);
+        field.setBounds(150, y, 220, 28);
+        dialog.add(field);
+        return y + 45;
     }
     
     private void deleteTransaction() {
@@ -457,7 +415,8 @@ public class History {
         int id = getSelectedId();
         if (id == -1) return;
         
-        int confirm = JOptionPane.showConfirmDialog(null, "Delete this transaction?", "Confirm", JOptionPane.YES_NO_OPTION);
+        int confirm = JOptionPane.showConfirmDialog(null, "Delete this transaction?", 
+            "Confirm", JOptionPane.YES_NO_OPTION);
         if (confirm == JOptionPane.YES_OPTION) {
             if (Database.deleteTransaction(id)) {
                 JOptionPane.showMessageDialog(null, "Deleted!");
@@ -470,18 +429,18 @@ public class History {
     }
     
     private void exportCSV() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Export CSV");
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Export CSV");
         
-        if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
-            try (PrintWriter writer = new PrintWriter(new File(fileChooser.getSelectedFile() + ".csv"))) {
-                writer.println("Description,Type,Category,Amount,Date");
+        if (fc.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+            try (PrintWriter w = new PrintWriter(new File(fc.getSelectedFile() + ".csv"))) {
+                w.println("Description,Type,Category,Amount,Date");
                 for (int i = 0; i < model.getRowCount(); i++) {
                     for (int j = 0; j < model.getColumnCount(); j++) {
-                        writer.print(model.getValueAt(i, j));
-                        if (j < model.getColumnCount() - 1) writer.print(",");
+                        w.print(model.getValueAt(i, j));
+                        if (j < model.getColumnCount() - 1) w.print(",");
                     }
-                    writer.println();
+                    w.println();
                 }
                 JOptionPane.showMessageDialog(null, "Exported!");
             } catch (Exception ex) {
@@ -491,25 +450,22 @@ public class History {
     }
     
     private void importCSV() {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Import CSV");
+        JFileChooser fc = new JFileChooser();
+        fc.setDialogTitle("Import CSV");
         
-        if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            try (BufferedReader reader = new BufferedReader(new FileReader(fileChooser.getSelectedFile()))) {
-                reader.readLine();
+        if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+            try (BufferedReader r = new BufferedReader(new FileReader(fc.getSelectedFile()))) {
+                r.readLine();
                 String line;
                 int count = 0;
                 
-                while ((line = reader.readLine()) != null) {
+                while ((line = r.readLine()) != null) {
                     String[] parts = line.split(",");
                     if (parts.length >= 5) {
-                        String desc = parts[0];
-                        String type = parts[1];
-                        String category = parts[2];
                         double amount = Double.parseDouble(parts[3].replace("$", ""));
                         java.sql.Date date = java.sql.Date.valueOf(parts[4]);
                         
-                        if (Database.addTransaction(userId, type, category, amount, desc, date)) {
+                        if (Database.addTransaction(userId, parts[1], parts[2], amount, parts[0], date)) {
                             count++;
                         }
                     }
